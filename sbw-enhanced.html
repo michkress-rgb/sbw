@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SBW · fobizz KI-Prototyp · Story‑Workbench</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --bg-alt: #0f1623;
+      --card: #1a1f2e;
+      --card-hover: #222942;
+      --border: #2d3748;
+      --ink: #f8fafc;
+      --ink-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-glow: rgba(59, 130, 246, 0.2);
+      --secondary: #8b5cf6;
+      --secondary-glow: rgba(139, 92, 246, 0.2);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 50%, #0f1623 100%);
+      line-height: 1.6;
+    }
+    
+    /* Header */
+    header {
+      background: rgba(26, 31, 46, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow);
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 24px;
+      color: white;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    
+    .header-title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    button, .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--ink);
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    
+    button:hover, .btn:hover {
+      background: var(--card-hover);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    
+    button.primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    
+    button.secondary {
+      background: transparent;
+      border-color: transparent;
+    }
+    
+    button.secondary:hover {
+      background: var(--card);
+      border-color: var(--border);
+    }
+    
+    /* Main Layout */
+    main {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      height: calc(100vh - 96px);
+      gap: 0;
+    }
+    
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      
+      nav {
+        display: none;
+      }
+      
+      nav.mobile-open {
+        display: block;
+        position: fixed;
+        top: 96px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+      }
+    }
+    
+    /* Sidebar Navigation */
+    nav {
+      background: var(--bg-alt);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    
+    .nav-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(59, 130, 246, 0.05);
+    }
+    
+    .progress-ring {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 16px;
+      position: relative;
+    }
+    
+    .progress-ring svg {
+      transform: rotate(-90deg);
+    }
+    
+    .progress-ring-circle {
+      stroke: var(--border);
+      fill: transparent;
+      stroke-width: 8;
+    }
+    
+    .progress-ring-progress {
+      stroke: var(--accent);
+      fill: transparent;
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+    
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .progress-label {
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      color: var(--ink-muted);
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .tab:hover {
+      background: var(--card);
+      color: var(--ink);
+      border-left-color: var(--border);
+    }
+    
+    .tab.active {
+      background: linear-gradient(90deg, var(--accent-glow), transparent);
+      color: var(--ink);
+      border-left-color: var(--accent);
+      font-weight: 600;
+    }
+    
+    .tab-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .tab-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    
+    .tab.active .tab-badge {
+      background: var(--secondary);
+    }
+    
+    /* Content Area */
+    .content {
+      overflow-y: auto;
+      padding: 32px;
+      background: var(--bg);
+    }
+    
+    .content-header {
+      margin-bottom: 32px;
+    }
+    
+    .content-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, var(--ink), var(--ink-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .content-description {
+      color: var(--ink-muted);
+      font-size: 16px;
+    }
+    
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      transition: all 0.2s ease;
+    }
+    
+    .card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-glow);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .row {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1fr;
+    }
+    
+    @media (min-width: 900px) {
+      .row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    /* Form Elements */
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+    
+    input[type="text"],
+    input[type="date"],
+    textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-alt);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      color: var(--ink);
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+    
+    .hint {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--ink-muted);
+      font-style: italic;
+    }
+    
+    /* List Items */
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+    
+    .item:hover {
+      border-color: var(--accent);
+      background: var(--card);
+    }
+    
+    .item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+    
+    .item input[type="text"],
+    .item input[type="date"] {
+      background: transparent;
+      border: 1px solid transparent;
+      padding: 8px 12px;
+    }
+    
+    .item input[type="text"]:focus,
+    .item input[type="date"]:focus {
+      background: var(--bg);
+      border-color: var(--accent);
+    }
+    
+    .item button {
+      padding: 8px 12px;
+      min-width: auto;
+      background: transparent;
+      border-color: transparent;
+      color: var(--danger);
+      font-size: 18px;
+    }
+    
+    .item button:hover {
+      background: var(--danger);
+      color: white;
+      border-color: var(--danger);
+    }
+    
+    .item.done {
+      opacity: 0.6;
+    }
+    
+    .item.done input[type="text"] {
+      text-decoration: line-through;
+    }
+    
+    .pill {
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    
+    /* Notifications */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--card);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px 24px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 400px;
+      animation: slideIn 0.3s ease;
+      z-index: 1000;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    .toast.success {
+      border-color: var(--success);
+      background: linear-gradient(90deg, var(--success-glow), var(--card));
+    }
+    
+    .toast-icon {
+      font-size: 24px;
+    }
+    
+    .toast-message {
+      flex: 1;
+      font-weight: 600;
+    }
+    
+    /* Utility */
+    .invis {
+      display: none;
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .mt-2 {
+      margin-top: 16px;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--ink-muted);
+    }
+    
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+    
+    .empty-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 6px;
+      border: 2px solid var(--bg);
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo">S</div>
+      <div class="header-title">
+        <h1>SBW · fobizz KI-Prototyp · Story‑Workbench</h1>
+        <div class="subtitle">Selbstgesteuertes Lernen · Sichtbare Lernprozesse · Prototyping</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button id="btn-save" class="primary">💾 Speichern</button>
+      <button id="btn-export">📄 Export HTML</button>
+      <label class="btn secondary" for="file-import">📂 Import</label>
+      <input id="file-import" class="invis" type="file" accept="application/json" />
+      <button id="btn-reset" class="secondary">🔄 Zurücksetzen</button>
+    </div>
+  </header>
+
+  <main>
+    <nav id="tabs">
+      <div class="nav-header">
+        <div class="progress-ring">
+          <svg width="120" height="120">
+            <circle class="progress-ring-circle" cx="60" cy="60" r="52"></circle>
+            <circle id="progress-circle" class="progress-ring-progress" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <div class="progress-text" id="progress-text">0%</div>
+        </div>
+        <div class="progress-label">Fortschritt</div>
+      </div>
+    </nav>
+    
+    <section class="content" id="panel"></section>
+  </main>
+
+  <!-- Templates -->
+  <template id="tpl-overview">
+    <div class="content-header">
+      <div class="content-title">Projekt-Übersicht</div>
+      <div class="content-description">Gib deinem Prototyp einen Namen und beschreibe den Kontext</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">🎯</div>
+          Projektname
+        </div>
+      </div>
+      <input data-bind="title" type="text" placeholder="z. B. Sachtext-Coach / Reading-Companion / Schreibmentor" />
+      <div class="hint">Kurzer, prägnanter Titel für deinen KI-Prototyp</div>
+    </div>
+    
+    <div class="row">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon">📝</div>
+            Kurzbeschreibung
+          </div>
+        </div>
+        <textarea data-bind="summary" placeholder="Worum geht es? Für wen ist der Prototyp? Welches Problem wird im Alltag gelöst?"></textarea>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon">🏫</div>
+            Kontext
+          </div>
+        </div>
+        <textarea data-bind="context" placeholder="z. B. IGCSE Deutsch, Klasse 6–10, Schreibförderung, Bibliotheksarbeit"></textarea>
+        <div class="hint">Klassen, Fächer, organisatorischer Rahmen</div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-role-goal">
+    <div class="content-header">
+      <div class="content-title">Rolle & Ziel</div>
+      <div class="content-description">Definiere deine Rolle und das gewünschte Ergebnis</div>
+    </div>
+    
+    <div class="row">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon">👤</div>
+            Als … (Rolle)
+          </div>
+        </div>
+        <input data-bind="role" type="text" placeholder="Als Lernbegleiter:in / Fachlehrer:in / Bibliothekscoach …" />
+        <div class="hint">Deine Perspektive und Position</div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon">🎯</div>
+            möchte ich … damit …
+          </div>
+        </div>
+        <textarea data-bind="goal" placeholder="… ein KI-gestütztes Werkzeug entwickeln, damit Lernende selbstgesteuert üben, reflektieren und Fortschritt sichtbar machen."></textarea>
+        <div class="hint">Ziel und erwartete Wirkung</div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-criteria">
+    <div class="content-header">
+      <div class="content-title">Akzeptanzkriterien</div>
+      <div class="content-description">Definiere messbare Kriterien für den Erfolg deines Prototyps</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">✅</div>
+          Erfolgskriterien
+        </div>
+        <button data-action="add-criterion">+ Kriterium hinzufügen</button>
+      </div>
+      <div id="criteria-list" class="list"></div>
+      <div class="hint">Hake ab, wenn ein Kriterium erfüllt ist. Formuliere messbar und spezifisch.</div>
+    </div>
+  </template>
+
+  <template id="tpl-output">
+    <div class="content-header">
+      <div class="content-title">Output & Tools</div>
+      <div class="content-description">Beschreibe den fertigen Prototyp und die verwendeten Werkzeuge</div>
+    </div>
+    
+    <div class="row">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon">🚀</div>
+            Output (Prototyp)
+          </div>
+        </div>
+        <textarea data-bind="output" placeholder="Funktionsbeschreibung, Beispieleingaben/-ausgaben, Einsatz im Unterricht"></textarea>
+        <div class="hint">Wie sieht der fertige Prototyp aus? Was kann er?</div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon">🔧</div>
+            Verwendete Tools
+          </div>
+        </div>
+        <textarea data-bind="tools" placeholder="fobizz, ggf. ChatGPT, Class Notebook, Canva, Notion …"></textarea>
+        <div class="hint">Welche KI-Tools und Plattformen hast du genutzt?</div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-why">
+    <div class="content-header">
+      <div class="content-title">Reason Why</div>
+      <div class="content-description">Erkläre, wie dein Prototyp die SBW-Werte umsetzt</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">💡</div>
+          SBW-Fit & Begründung
+        </div>
+      </div>
+      <textarea data-bind="why" placeholder="Wie übersetzt der Prototyp Selbststeuerung, Verantwortung und Sichtbarkeit des Lernens in die Praxis? Warum ist dieser Ansatz wertvoll?"></textarea>
+      <div class="hint">Verbindung zu den Prinzipien: Selbststeuerung, Verantwortung, Transparenz</div>
+    </div>
+  </template>
+
+  <template id="tpl-learnings">
+    <div class="content-header">
+      <div class="content-title">Learnings</div>
+      <div class="content-description">Dokumentiere deine Erkenntnisse und Aha-Momente</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">💭</div>
+          Zwischenerkenntnisse
+        </div>
+        <button data-action="add-learning">+ Learning hinzufügen</button>
+      </div>
+      <div id="learning-list" class="list"></div>
+      <div class="hint">Was hast du gelernt? Welche Überraschungen gab es?</div>
+    </div>
+  </template>
+
+  <template id="tpl-testimonial">
+    <div class="content-header">
+      <div class="content-title">Testimonial & Wirkung</div>
+      <div class="content-description">Halte Feedback und beobachtete Wirkungen fest</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">💬</div>
+          Rückmeldungen
+        </div>
+      </div>
+      <textarea data-bind="testimonial" placeholder="Zitat eines Lernenden oder Kollegen: 'Ich habe bewusster über Sprache nachgedacht …' oder deine Beobachtungen zur Wirkung"></textarea>
+      <div class="hint">Original-Zitate, Beobachtungen, messbare Veränderungen</div>
+    </div>
+  </template>
+
+  <template id="tpl-plan">
+    <div class="content-header">
+      <div class="content-title">Handlungsplan</div>
+      <div class="content-description">Definiere konkrete nächste Schritte</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">📋</div>
+          Nächste Schritte
+        </div>
+        <button data-action="add-task">+ Schritt hinzufügen</button>
+      </div>
+      <div id="task-list" class="list"></div>
+      <div class="hint">Formuliere kleine, überprüfbare Schritte. Setze realistische Fälligkeiten.</div>
+    </div>
+  </template>
+
+  <template id="tpl-story">
+    <div class="content-header">
+      <div class="content-title">Die Story</div>
+      <div class="content-description">Erzähle deine Geschichte – für die SBW und die Außenwelt</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">📖</div>
+          Narrative Zusammenfassung
+        </div>
+      </div>
+      <textarea data-bind="story" style="min-height: 300px" placeholder="Erzähle die Geschichte deines Prototyps: Wie kam die Idee? Welche Herausforderungen gab es? Was hast du dabei gelernt? Wie ging es den Lernenden damit?
+
+Tipp: Schreibe authentisch und konkret. Zeige den Prozess, nicht nur das Ergebnis."></textarea>
+      <div class="hint">Die Geschichte macht dein Projekt lebendig und nachvollziehbar</div>
+    </div>
+  </template>
+
+  <template id="tpl-custom">
+    <div class="content-header">
+      <div class="content-title">Eigene Notizen</div>
+      <div class="content-description">Freier Raum für zusätzliche Gedanken und Ideen</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">✏️</div>
+          Zusätzliche Überlegungen
+        </div>
+      </div>
+      <textarea data-bind="custom" style="min-height: 300px" placeholder="Nutze diesen Raum für alles, was nicht in die anderen Kategorien passt:
+• Weiterführende Ideen
+• Offene Fragen
+• Links und Ressourcen
+• Feedback von Kollegen
+• Technische Details"></textarea>
+    </div>
+  </template>
+
+  <script>
+  const TABS = [
+    {id:'overview', label:'Übersicht', icon:'🎯', tpl:'tpl-overview'},
+    {id:'role-goal', label:'Rolle & Ziel', icon:'👤', tpl:'tpl-role-goal'},
+    {id:'criteria', label:'Akzeptanzkriterien', icon:'✅', tpl:'tpl-criteria'},
+    {id:'output', label:'Output & Tools', icon:'🚀', tpl:'tpl-output'},
+    {id:'why', label:'Reason Why', icon:'💡', tpl:'tpl-why'},
+    {id:'learnings', label:'Learnings', icon:'💭', tpl:'tpl-learnings'},
+    {id:'testimonial', label:'Testimonial', icon:'💬', tpl:'tpl-testimonial'},
+    {id:'plan', label:'Handlungsplan', icon:'📋', tpl:'tpl-plan'},
+    {id:'story', label:'Story', icon:'📖', tpl:'tpl-story'},
+    {id:'custom', label:'Eigene Notizen', icon:'✏️', tpl:'tpl-custom'}
+  ];
+
+  const DEFAULT_DATA = {
+    title:'', summary:'', context:'', role:'', goal:'', output:'', tools:'',
+    why:'', testimonial:'', story:'', custom:'',
+    criteria:[], learnings:[], tasks:[]
+  };
+
+  const elTabs = document.getElementById('tabs');
+  const elPanel = document.getElementById('panel');
+  
+  function load(){
+    try{
+      const data = localStorage.getItem('sbw-fobizz-story');
+      return data ? {...DEFAULT_DATA, ...JSON.parse(data)} : structuredClone(DEFAULT_DATA);
+    } catch(e){
+      return structuredClone(DEFAULT_DATA);
+    }
+  }
+  
+  let state = load();
+
+  function save(){
+    localStorage.setItem('sbw-fobizz-story', JSON.stringify(state));
+    updateProgress();
+  }
+  
+  const saveDebounced = debounce(save, 300);
+
+  function debounce(fn, wait){
+    let t; 
+    return (...a)=>{
+      clearTimeout(t); 
+      t=setTimeout(()=>fn.apply(null,a), wait);
+    };
+  }
+
+  function showToast(message, type='success'){
+    const existing = document.querySelector('.toast');
+    if(existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+      <div class="toast-icon">${type==='success' ? '✅' : '⚠️'}</div>
+      <div class="toast-message">${message}</div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(), 3000);
+  }
+
+  function updateProgress(){
+    const fields = ['title','summary','context','role','goal','output','tools','why','testimonial','story'];
+    const filled = fields.filter(f=>state[f] && state[f].trim().length>0).length;
+    const arrayCounts = state.criteria.length + state.learnings.length + state.tasks.length;
+    const total = fields.length + (arrayCounts > 0 ? 1 : 0);
+    const percent = Math.round((filled / total) * 100);
+    
+    document.getElementById('progress-text').textContent = percent + '%';
+    
+    const circle = document.getElementById('progress-circle');
+    const radius = 52;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (percent / 100) * circumference;
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = offset;
+  }
+
+  function renderTabs(activeId){
+    const nav = document.getElementById('tabs');
+    const existingHeader = nav.querySelector('.nav-header');
+    nav.innerHTML = '';
+    if(existingHeader) nav.appendChild(existingHeader);
+    
+    TABS.forEach(t=>{
+      const a = document.createElement('a');
+      a.href = '#'+t.id;
+      a.className = 'tab'+(t.id===activeId?' active':'');
+      
+      let count = 0;
+      if(t.id==='criteria') count = state.criteria.length;
+      if(t.id==='learnings') count = state.learnings.length;
+      if(t.id==='plan') count = state.tasks.length;
+      
+      a.innerHTML = `
+        <div class="tab-icon">${t.icon}</div>
+        <span>${t.label}</span>
+        ${count>0 ? `<span class="tab-badge">${count}</span>` : ''}
+      `;
+      a.addEventListener('click', (e)=>{e.preventDefault(); render(t.id)});
+      nav.appendChild(a);
+    });
+  }
+
+  function bindInputs(root){
+    root.querySelectorAll('[data-bind]').forEach(el=>{
+      const key = el.dataset.bind;
+      if(key in state) el.value = state[key] ?? '';
+      el.addEventListener('input', ()=>{
+        state[key] = el.value; 
+        saveDebounced();
+      });
+    });
+  }
+
+  function renderCriteria(root){
+    const list = root.querySelector('#criteria-list');
+    const draw = ()=>{
+      if(state.criteria.length === 0){
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-title">Noch keine Kriterien</div><div>Füge dein erstes Akzeptanzkriterium hinzu</div></div>';
+        return;
+      }
+      list.innerHTML='';
+      state.criteria.forEach((c,idx)=>{
+        const row = document.createElement('div');
+        row.className = 'item' + (c.done ? ' done' : '');
+        
+        const chk = document.createElement('input');
+        chk.type='checkbox';
+        chk.checked = !!c.done;
+        chk.addEventListener('change', ()=>{c.done = chk.checked; draw(); saveDebounced()});
+        
+        const txt = document.createElement('input');
+        txt.type='text';
+        txt.value=c.text||'';
+        txt.placeholder='z.B. Der Prototyp erzeugt grammatisch korrekte Ausgaben';
+        txt.addEventListener('input',()=>{c.text=txt.value; saveDebounced()});
+        
+        const del = document.createElement('button');
+        del.textContent='×';
+        del.title='Entfernen';
+        del.addEventListener('click', ()=>{state.criteria.splice(idx,1); draw(); saveDebounced()});
+        
+        row.append(chk, txt, del);
+        list.appendChild(row);
+      });
+    };
+    draw();
+    root.querySelector('[data-action="add-criterion"]').addEventListener('click', ()=>{
+      state.criteria.push({text:'',done:false});
+      draw();
+      saveDebounced();
+    });
+  }
+
+  function renderLearnings(root){
+    const list = root.querySelector('#learning-list');
+    const draw = ()=>{
+      if(state.learnings.length === 0){
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">💡</div><div class="empty-title">Noch keine Learnings</div><div>Dokumentiere deine Erkenntnisse</div></div>';
+        return;
+      }
+      list.innerHTML='';
+      state.learnings.forEach((l,idx)=>{
+        const row = document.createElement('div');
+        row.className='item';
+        
+        const pill = document.createElement('span');
+        pill.className='pill';
+        const date = new Date(l.ts||Date.now());
+        pill.textContent = date.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'2-digit'});
+        
+        const txt = document.createElement('input');
+        txt.type='text';
+        txt.value=l.text||'';
+        txt.placeholder='z.B. KI kann kreative Schreibanlässe bieten, aber Feedback braucht menschliche Begleitung';
+        txt.addEventListener('input',()=>{l.text=txt.value; saveDebounced()});
+        
+        const del = document.createElement('button');
+        del.textContent='×';
+        del.addEventListener('click', ()=>{state.learnings.splice(idx,1); draw(); saveDebounced()});
+        
+        row.append(pill, txt, del);
+        list.appendChild(row);
+      });
+    };
+    draw();
+    root.querySelector('[data-action="add-learning"]').addEventListener('click', ()=>{
+      state.learnings.push({text:'', ts:Date.now()});
+      draw();
+      saveDebounced();
+    });
+  }
+
+  function renderTasks(root){
+    const list = root.querySelector('#task-list');
+    const draw = ()=>{
+      if(state.tasks.length === 0){
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">Noch keine Schritte</div><div>Plane deine nächsten Aktionen</div></div>';
+        return;
+      }
+      list.innerHTML='';
+      state.tasks.forEach((t,idx)=>{
+        const row = document.createElement('div');
+        row.className = 'item' + (t.done ? ' done' : '');
+        
+        const chk = document.createElement('input');
+        chk.type='checkbox';
+        chk.checked = !!t.done;
+        chk.addEventListener('change', ()=>{t.done = chk.checked; draw(); saveDebounced()});
+        
+        const txt = document.createElement('input');
+        txt.type='text';
+        txt.value=t.text||'';
+        txt.placeholder='z.B. Prototyp mit 5 Lernenden testen';
+        txt.addEventListener('input',()=>{t.text=txt.value; saveDebounced()});
+        
+        const due = document.createElement('input');
+        due.type='date';
+        due.value=t.due||'';
+        due.addEventListener('input',()=>{t.due=due.value; saveDebounced()});
+        
+        const del = document.createElement('button');
+        del.textContent='×';
+        del.addEventListener('click', ()=>{state.tasks.splice(idx,1); draw(); saveDebounced()});
+        
+        row.append(chk, txt, due, del);
+        list.appendChild(row);
+      });
+    };
+    draw();
+    root.querySelector('[data-action="add-task"]').addEventListener('click', ()=>{
+      state.tasks.push({text:'',due:'',done:false});
+      draw();
+      saveDebounced();
+    });
+  }
+
+  function render(activeId){
+    renderTabs(activeId);
+    const tab = TABS.find(t=>t.id===activeId) || TABS[0];
+    const tpl = document.getElementById(tab.tpl);
+    const root = tpl.content.cloneNode(true);
+
+    bindInputs(root);
+
+    if(tab.id==='criteria') renderCriteria(root);
+    if(tab.id==='learnings') renderLearnings(root);
+    if(tab.id==='plan') renderTasks(root);
+
+    elPanel.innerHTML='';
+    elPanel.appendChild(root);
+    history.replaceState(null, '', '#'+tab.id);
+    
+    // Scroll to top
+    elPanel.scrollTop = 0;
+  }
+
+  function download(filename, content, type='application/json'){
+    const a = document.createElement('a');
+    const file = new Blob([content], {type});
+    a.href = URL.createObjectURL(file);
+    a.download = filename;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+  }
+
+  function toPrintableHTML(){
+    const s = state;
+    const esc = (x)=> (x||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const nl2br = (x)=> esc(x).replace(/\n/g,'<br>');
+    const li = (arr, fn)=> arr.map(fn).join('');
+    
+    return `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>${esc(s.title||'SBW Story')}</title>
+  <style>
+    body{font:16px/1.7 -apple-system,system-ui,sans-serif;margin:40px auto;max-width:900px;color:#1a1f2e;background:#f8fafc}
+    h1{font-size:36px;color:#1a1f2e;border-bottom:3px solid #3b82f6;padding-bottom:12px;margin-bottom:32px}
+    h2{font-size:24px;color:#3b82f6;margin-top:40px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+    h2::before{content:attr(data-icon);font-size:28px}
+    p{margin:12px 0}
+    strong{color:#1a1f2e}
+    ul{padding-left:24px;margin:16px 0}
+    li{margin:8px 0}
+    .section{background:white;padding:24px;border-radius:12px;margin:24px 0;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+    .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;margin-right:8px}
+    .badge.done{background:#10b981;color:white}
+    .badge.pending{background:#f59e0b;color:white}
+    .badge.date{background:#3b82f6;color:white}
+    footer{margin-top:60px;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:14px;text-align:center}
+  </style>
+</head>
+<body>
+  <h1>${esc(s.title||'SBW · fobizz KI-Prototyp')}</h1>
+  
+  <div class="section">
+    <h2 data-icon="🎯">Übersicht</h2>
+    <p><strong>Kurzbeschreibung:</strong><br>${nl2br(s.summary)}</p>
+    <p><strong>Kontext:</strong><br>${nl2br(s.context)}</p>
+  </div>
+  
+  <div class="section">
+    <h2 data-icon="👤">Rolle & Ziel</h2>
+    <p><strong>Rolle:</strong> ${esc(s.role)}</p>
+    <p><strong>Ziel:</strong><br>${nl2br(s.goal)}</p>
+  </div>
+  
+  <div class="section">
+    <h2 data-icon="✅">Akzeptanzkriterien</h2>
+    <ul>
+      ${li(s.criteria, c=>`<li>${c.done?'<span class="badge done">Erledigt</span>':'<span class="badge pending">Offen</span>'} ${esc(c.text)}</li>`)}
+    </ul>
+  </div>
+  
+  <div class="section">
+    <h2 data-icon="🚀">Output & Tools</h2>
+    <p><strong>Output:</strong><br>${nl2br(s.output)}</p>
+    <p><strong>Verwendete Tools:</strong><br>${nl2br(s.tools)}</p>
+  </div>
+  
+  <div class="section">
+    <h2 data-icon="💡">Reason Why</h2>
+    <p>${nl2br(s.why)}</p>
+  </div>
+  
+  <div class="section">
+    <h2 data-icon="💭">Learnings</h2>
+    <ul>
+      ${li(s.learnings, l=>{
+        const date = new Date(l.ts||Date.now()).toLocaleDateString('de-DE');
+        return `<li><span class="badge date">${date}</span> ${esc(l.text)}</li>`;
+      })}
+    </ul>
+  </div>
+  
+  <div class="section">
+    <h2 data-icon="💬">Testimonial & Wirkung</h2>
+    <p>${nl2br(s.testimonial)}</p>
+  </div>
+  
+  <div class="section">
+    <h2 data-icon="📋">Handlungsplan</h2>
+    <ul>
+      ${li(s.tasks, t=>{
+        const dueText = t.due ? ` <span class="badge date">Fällig: ${t.due}</span>` : '';
+        return `<li>${t.done?'<span class="badge done">Erledigt</span>':'<span class="badge pending">Offen</span>'} ${esc(t.text)}${dueText}</li>`;
+      })}
+    </ul>
+  </div>
+  
+  <div class="section">
+    <h2 data-icon="📖">Die Story</h2>
+    <p>${nl2br(s.story)}</p>
+  </div>
+  
+  ${s.custom ? `<div class="section">
+    <h2 data-icon="✏️">Eigene Notizen</h2>
+    <p>${nl2br(s.custom)}</p>
+  </div>` : ''}
+  
+  <footer>
+    Automatisch generiert am ${new Date().toLocaleString('de-DE', {dateStyle:'long', timeStyle:'short'})}
+  </footer>
+</body>
+</html>`;
+  }
+
+  // UI Events
+  document.getElementById('btn-save').addEventListener('click', ()=>{
+    save();
+    const filename = `${(state.title||'sbw-story').toLowerCase().replace(/\s+/g,'-')}.json`;
+    download(filename, JSON.stringify(state, null, 2));
+    showToast('Projekt als JSON gespeichert!');
+  });
+
+  document.getElementById('btn-export').addEventListener('click', ()=>{
+    const html = toPrintableHTML();
+    const filename = `${(state.title||'sbw-story').toLowerCase().replace(/\s+/g,'-')}.html`;
+    download(filename, html, 'text/html');
+    showToast('Export als HTML erfolgreich!');
+  });
+
+  document.getElementById('file-import').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try{
+        state = JSON.parse(rd.result);
+        save();
+        render(location.hash.slice(1)||'overview');
+        showToast('Import erfolgreich!');
+      } catch(err){
+        showToast('Import fehlgeschlagen: ' + err.message, 'error');
+      }
+    };
+    rd.readAsText(file);
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', ()=>{
+    if(confirm('Möchtest du wirklich alle Daten zurücksetzen? Dies kann nicht rückgängig gemacht werden.')){
+      state = structuredClone(DEFAULT_DATA);
+      save();
+      render('overview');
+      showToast('Alle Daten wurden zurückgesetzt');
+    }
+  });
+
+  // Bootstrap
+  render(location.hash.slice(1)||'overview');
+  updateProgress();
+  window.addEventListener('beforeunload', save);
+  </script>
+</body>
+</html>
