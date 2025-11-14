@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SBW · fobizz KI-Prototyp · Story‑Workbench</title>
+  <style>
+    :root{
+      --bg:#0f172a;        /* slate-900 */
+      --card:#111827;      /* gray-900 */
+      --ink:#e5e7eb;       /* gray-200 */
+      --muted:#9ca3af;     /* gray-400 */
+      --accent:#38bdf8;    /* sky-400 */
+      --accent-2:#a78bfa;  /* violet-400 */
+      --ok:#22c55e;        /* green-500 */
+      --warn:#f97316;      /* orange-500 */
+      --err:#ef4444;       /* red-500 */
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif;
+      color:var(--ink); background:radial-gradient(1200px 800px at 10% -10%, #1e293b, var(--bg));
+    }
+    header{
+      padding:16px 20px; display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      background:linear-gradient(90deg, rgba(56,189,248,.15), rgba(167,139,250,.15)); border-bottom:1px solid #1f2937;
+    }
+    h1{font-size:20px; margin:0}
+    .badge{font-size:12px;color:var(--muted)}
+    .toolbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    button, .ghost{
+      appearance:none; border:1px solid #334155; background:#0b1220; color:var(--ink);
+      padding:8px 12px; border-radius:10px; cursor:pointer; transition:all .2s ease; font-weight:600;
+    }
+    button:hover{border-color:var(--accent); box-shadow:0 0 0 2px rgba(56,189,248,.25) inset}
+    .ghost{border-color:transparent; background:transparent}
+    .ghost:hover{border-color:#334155; background:#0b1220}
+    main{display:grid; grid-template-columns:280px 1fr; height:calc(100% - 74px)}
+    nav{border-right:1px solid #1f2937; overflow:auto; background:#0b1220}
+    .tab{display:block; padding:12px 16px; border-bottom:1px solid #111827; color:var(--ink); text-decoration:none}
+    .tab small{color:var(--muted)}
+    .tab.active{background:linear-gradient(90deg, rgba(56,189,248,.15), rgba(167,139,250,.15)); border-left:4px solid var(--accent)}
+    .content{padding:20px; overflow:auto}
+    .card{background:var(--card); border:1px solid #1f2937; border-radius:14px; padding:16px; margin:0 0 18px}
+    .row{display:grid; gap:12px}
+    @media(min-width:900px){.row{grid-template-columns:1fr 1fr}}
+    label{display:block; font-weight:700; margin-bottom:6px}
+    input[type="text"], textarea{
+      width:100%; padding:12px; background:#0b1220; border:1px solid #334155; border-radius:10px; color:var(--ink);
+    }
+    textarea{min-height:140px; resize:vertical}
+    .hint{color:var(--muted); font-size:12px}
+    .list{display:flex; flex-direction:column; gap:10px}
+    .item{display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center}
+    .item input[type="checkbox"]{width:18px; height:18px}
+    .pill{padding:2px 8px; border-radius:999px; border:1px solid #334155; color:var(--muted); font-size:12px}
+    .accent{color:var(--accent)}
+    .success{color:var(--ok)}
+    .danger{color:var(--err)}
+    .footer{display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; color:var(--muted)}
+    .kbd{border:1px solid #334155; padding:2px 6px; border-radius:6px; background:#0b1220; color:var(--ink); font-size:12px}
+    .invis{display:none}
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>SBW · fobizz KI-Prototyp · Story‑Workbench</h1>
+      <div class="badge">Selbstgesteuertes Lernen · Sichtbare Lernprozesse · Prototyping</div>
+    </div>
+    <div class="toolbar">
+      <button id="btn-save">Speichern (JSON)</button>
+      <button id="btn-export">Export als druckbares HTML</button>
+      <label class="ghost" for="file-import">Importieren</label>
+      <input id="file-import" class="invis" type="file" accept="application/json" />
+      <button id="btn-reset" class="ghost">Zurücksetzen</button>
+    </div>
+  </header>
+  <main>
+    <nav id="tabs"></nav>
+    <section class="content" id="panel"></section>
+  </main>
+
+  <template id="tpl-overview">
+    <div class="card">
+      <label>Projektname</label>
+      <input data-bind="title" type="text" placeholder="z. B. Sachtext‑Coach / Reading‑Companion / Schreibmentor" />
+      <div class="hint">Kurzer, prägnanter Titel für deinen Prototyp.</div>
+    </div>
+    <div class="row">
+      <div class="card">
+        <label>Kurzbeschreibung</label>
+        <textarea data-bind="summary" placeholder="Worum geht es? Für wen? Welches Problem im Alltag wird gelöst?"></textarea>
+      </div>
+      <div class="card">
+        <label>Kontext (Klassen, Fächer, Rahmen)</label>
+        <textarea data-bind="context" placeholder="z. B. IGCSE Deutsch, Klasse 6–10, Schreibförderung, Bibliotheksarbeit"></textarea>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-role-goal">
+    <div class="row">
+      <div class="card">
+        <label>Als … (Rolle)</label>
+        <input data-bind="role" type="text" placeholder="Als Lernbegleiter:in / Fachlehrer:in / Bibliothekscoach …" />
+      </div>
+      <div class="card">
+        <label>möchte ich … damit … (Ziel & Wirkung)</label>
+        <textarea data-bind="goal" placeholder="… ein KI‑gestütztes Werkzeug entwickeln, damit Lernende selbstgesteuert üben, reflektieren und Fortschritt sichtbar machen."></textarea>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-criteria">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <label>Akzeptanzkriterien</label>
+        <button data-action="add-criterion">+ Kriterium</button>
+      </div>
+      <div id="criteria-list" class="list"></div>
+      <div class="hint">Hake ab, wenn erfüllt. Nutze messbare Formulierungen.</div>
+    </div>
+  </template>
+
+  <template id="tpl-output">
+    <div class="row">
+      <div class="card">
+        <label>Output (Prototyp)</label>
+        <textarea data-bind="output" placeholder="Funktionsbeschreibung, Beispieleingaben/‑ausgaben, Einsatz im Unterricht"></textarea>
+      </div>
+      <div class="card">
+        <label>Verwendete Tools</label>
+        <textarea data-bind="tools" placeholder="fobizz, ggf. ChatGPT, Class Notebook, Canva, Notion …"></textarea>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-why">
+    <div class="card">
+      <label>Reason why (SBW‑Fit)</label>
+      <textarea data-bind="why" placeholder="Wie übersetzt der Prototyp Selbststeuerung, Verantwortung, Sichtbarkeit des Lernens in die Praxis?"></textarea>
+    </div>
+  </template>
+
+  <template id="tpl-learnings">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <label>Learnings (Zwischenerkenntnisse)</label>
+        <button data-action="add-learning">+ Insight</button>
+      </div>
+      <div id="learning-list" class="list"></div>
+    </div>
+  </template>
+
+  <template id="tpl-testimonial">
+    <div class="card">
+      <label>Testimonial / Wirkung</label>
+      <textarea data-bind="testimonial" placeholder="Zitat eines Lernenden / Kollegen: ‚Ich habe bewusster über Sprache nachgedacht …‘"></textarea>
+    </div>
+  </template>
+
+  <template id="tpl-plan">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <label>Handlungsplan</label>
+        <button data-action="add-task">+ Schritt</button>
+      </div>
+      <div id="task-list" class="list"></div>
+      <div class="hint">Tipp: Formuliere kleine, überprüfbare Schritte. Füge Fälligkeiten hinzu.</div>
+    </div>
+  </template>
+
+  <template id="tpl-story">
+    <div class="card">
+      <label>Story‑Dokumentation (für SBW & Außenwelt)</label>
+      <textarea data-bind="story" placeholder="Kurz erzählen: Ausgangslage → Prototyp → Erprobung → Wirkung → Nächste Schritte. Füge ggf. Links/Screenshots hinzu."></textarea>
+    </div>
+  </template>
+
+  <template id="tpl-custom">
+    <div class="card">
+      <label>Eigenes Tab</label>
+      <textarea data-bind="custom" placeholder="Freiraum für Skizzen, Sketchnotes, Rubrics, Kriterien …"></textarea>
+    </div>
+  </template>
+
+  <script>
+  // ---- Data Model ----
+  const DEFAULT_DATA = {
+    title:"",
+    summary:"",
+    context:"",
+    role:"",
+    goal:"",
+    criteria:[
+      {text:"Fördert selbstgesteuertes Lernen und unmittelbares Feedback", done:false},
+      {text:"Integriert sich in bestehende Lernprozesse (Schreiben, Lesen, Grammatik)", done:false},
+      {text:"Dokumentiert Fortschritt sichtbar (Lernbiografie)", done:false}
+    ],
+    output:"",
+    tools:"fobizz KI‑Assistent; Class Notebook zur Dokumentation",
+    why:"Lernende handeln als Gestaltende ihres Lernwegs; Lehrperson wird Lerncoach; KI als Partner im Erkenntnisprozess.",
+    learnings:[
+      {text:"Rolle der Lehrperson verschiebt sich vom Erklären zum Coaching", ts:Date.now()},
+    ],
+    testimonial:"",
+    tasks:[
+      {text:"Idee schärfen & Ziel definieren", due:"", done:false},
+      {text:"Prototyp in fobizz bauen", due:"", done:false},
+      {text:"Pilot im Unterricht", due:"", done:false},
+      {text:"Reflexion & Anpassung", due:"", done:false},
+      {text:"Story veröffentlichen", due:"", done:false}
+    ],
+    story:"",
+    custom:""
+  };
+
+  const TABS = [
+    {id:"overview", label:"Übersicht", tpl:"tpl-overview"},
+    {id:"rolegoal", label:"Rolle & Ziel", tpl:"tpl-role-goal"},
+    {id:"criteria", label:"Akzeptanzkriterien", tpl:"tpl-criteria"},
+    {id:"output", label:"Output & Tools", tpl:"tpl-output"},
+    {id:"why", label:"Reason‑Why", tpl:"tpl-why"},
+    {id:"learnings", label:"Learnings", tpl:"tpl-learnings"},
+    {id:"testimonial", label:"Testimonial", tpl:"tpl-testimonial"},
+    {id:"plan", label:"Handlungsplan", tpl:"tpl-plan"},
+    {id:"story", label:"Story", tpl:"tpl-story"},
+    {id:"custom", label:"Eigenes Tab", tpl:"tpl-custom"},
+  ];
+
+  const elTabs = document.getElementById('tabs');
+  const elPanel = document.getElementById('panel');
+
+  function load(){
+    try{
+      const raw = localStorage.getItem('sbw-fobizz-story');
+      return raw? JSON.parse(raw): structuredClone(DEFAULT_DATA);
+    }catch(e){
+      console.warn('Load failed', e);
+      return structuredClone(DEFAULT_DATA);
+    }
+  }
+  let state = load();
+
+  function save(){
+    localStorage.setItem('sbw-fobizz-story', JSON.stringify(state));
+  }
+  const saveDebounced = debounce(save, 300);
+
+  function debounce(fn, wait){
+    let t; return (...a)=>{clearTimeout(t); t=setTimeout(()=>fn.apply(null,a), wait)}
+  }
+
+  function renderTabs(activeId){
+    elTabs.innerHTML = '';
+    TABS.forEach(t=>{
+      const a = document.createElement('a');
+      a.href = '#'+t.id; a.textContent = t.label; a.className = 'tab'+(t.id===activeId?' active':'');
+      a.addEventListener('click', (e)=>{e.preventDefault(); render(t.id)});
+      elTabs.appendChild(a);
+    });
+
+    const meta = document.createElement('div');
+    meta.className='tab';
+    const filled = Object.values(state).filter(v=>{
+      if(Array.isArray(v)) return v.length>0; if(typeof v==='string') return v.trim().length>0; return !!v
+    }).length;
+    meta.innerHTML = `<small>Lokale Speicherung aktiv · Felder: ${filled}</small>`;
+    elTabs.appendChild(meta);
+  }
+
+  function bindInputs(root){
+    root.querySelectorAll('[data-bind]').forEach(el=>{
+      const key = el.dataset.bind;
+      if(key in state) el.value = state[key] ?? '';
+      el.addEventListener('input', ()=>{state[key] = el.value; saveDebounced()});
+    });
+  }
+
+  function renderCriteria(root){
+    const list = root.querySelector('#criteria-list');
+    const draw = ()=>{
+      list.innerHTML='';
+      state.criteria.forEach((c,idx)=>{
+        const row = document.createElement('div'); row.className='item';
+        const chk = document.createElement('input'); chk.type='checkbox'; chk.checked = !!c.done;
+        chk.addEventListener('change', ()=>{c.done = chk.checked; saveDebounced()});
+        const txt = document.createElement('input'); txt.type='text'; txt.value=c.text||''; txt.addEventListener('input',()=>{c.text=txt.value; saveDebounced()});
+        const del = document.createElement('button'); del.textContent='–'; del.title='Entfernen';
+        del.addEventListener('click', ()=>{state.criteria.splice(idx,1); draw(); saveDebounced()});
+        row.append(chk, txt, del); list.appendChild(row);
+      });
+    }
+    draw();
+    root.querySelector('[data-action="add-criterion"]').addEventListener('click', ()=>{state.criteria.push({text:'',done:false}); draw(); saveDebounced()});
+  }
+
+  function renderLearnings(root){
+    const list = root.querySelector('#learning-list');
+    const draw = ()=>{
+      list.innerHTML='';
+      state.learnings.forEach((l,idx)=>{
+        const row = document.createElement('div'); row.className='item';
+        const pill = document.createElement('span'); pill.className='pill';
+        pill.textContent = new Date(l.ts||Date.now()).toLocaleString();
+        const txt = document.createElement('input'); txt.type='text'; txt.value=l.text||''; txt.addEventListener('input',()=>{l.text=txt.value; saveDebounced()});
+        const del = document.createElement('button'); del.textContent='–'; del.addEventListener('click', ()=>{state.learnings.splice(idx,1); draw(); saveDebounced()});
+        row.append(pill, txt, del); list.appendChild(row);
+      });
+    }
+    draw();
+    root.querySelector('[data-action="add-learning"]').addEventListener('click', ()=>{state.learnings.push({text:'', ts:Date.now()}); draw(); saveDebounced()});
+  }
+
+  function renderTasks(root){
+    const list = root.querySelector('#task-list');
+    const draw = ()=>{
+      list.innerHTML='';
+      state.tasks.forEach((t,idx)=>{
+        const row = document.createElement('div'); row.className='item';
+        const chk = document.createElement('input'); chk.type='checkbox'; chk.checked = !!t.done;
+        chk.addEventListener('change', ()=>{t.done = chk.checked; saveDebounced()});
+        const txt = document.createElement('input'); txt.type='text'; txt.value=t.text||''; txt.addEventListener('input',()=>{t.text=txt.value; saveDebounced()});
+        const due = document.createElement('input'); due.type='date'; due.value=t.due||''; due.addEventListener('input',()=>{t.due=due.value; saveDebounced()});
+        const del = document.createElement('button'); del.textContent='–'; del.addEventListener('click', ()=>{state.tasks.splice(idx,1); draw(); saveDebounced()});
+        row.append(chk, txt, due, del); list.appendChild(row);
+      });
+    }
+    draw();
+    root.querySelector('[data-action="add-task"]').addEventListener('click', ()=>{state.tasks.push({text:'',due:'',done:false}); draw(); saveDebounced()});
+  }
+
+  function render(activeId){
+    renderTabs(activeId);
+    const tab = TABS.find(t=>t.id===activeId) || TABS[0];
+    const tpl = document.getElementById(tab.tpl);
+    const root = tpl.content.cloneNode(true);
+
+    // Simple bindings
+    bindInputs(root);
+
+    // Complex components per tab
+    if(tab.id==='criteria') renderCriteria(root);
+    if(tab.id==='learnings') renderLearnings(root);
+    if(tab.id==='plan') renderTasks(root);
+
+    elPanel.innerHTML=''; elPanel.appendChild(root);
+    history.replaceState(null, '', '#'+tab.id);
+  }
+
+  // ---- Export & Import ----
+  function download(filename, content, type='application/json'){
+    const a = document.createElement('a');
+    const file = new Blob([content], {type});
+    a.href = URL.createObjectURL(file); a.download = filename; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+  }
+
+  function toPrintableHTML(){
+    const s = state; const esc = (x)=> (x||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const li = (arr, fn)=> arr.map(fn).join('');
+    return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>${esc(s.title||'SBW Story')}</title>
+    <style>body{font:16px/1.6 Georgia,serif;margin:40px;color:#111}h1,h2{font-family:ui-sans-serif,system-ui}h2{margin-top:28px}ul{padding-left:1.2em}</style>
+    </head><body>
+    <h1>${esc(s.title||'SBW · fobizz KI‑Prototyp')}</h1>
+    <h2>Übersicht</h2><p><b>Kurzbeschreibung:</b> ${esc(s.summary)}<br><b>Kontext:</b> ${esc(s.context)}</p>
+    <h2>Rolle & Ziel</h2><p><b>Rolle:</b> ${esc(s.role)}<br><b>Ziel:</b> ${esc(s.goal)}</p>
+    <h2>Akzeptanzkriterien</h2><ul>${li(s.criteria, c=>`<li>${esc(c.text)} ${c.done?'✔️':''}</li>`)}</ul>
+    <h2>Output & Tools</h2><p><b>Output:</b> ${esc(s.output)}<br><b>Tools:</b> ${esc(s.tools)}</p>
+    <h2>Reason‑Why</h2><p>${esc(s.why)}</p>
+    <h2>Learnings</h2><ul>${li(s.learnings, l=>`<li>${new Date(l.ts||Date.now()).toLocaleString()} — ${esc(l.text)}</li>`)}</ul>
+    <h2>Testimonial</h2><p>${esc(s.testimonial)}</p>
+    <h2>Handlungsplan</h2><ul>${li(s.tasks, t=>`<li>${t.done?'[x]':'[ ]'} ${esc(t.text)} ${t.due?('— fällig: '+esc(t.due)) : ''}</li>`)}</ul>
+    <h2>Story</h2><p>${esc(s.story)}</p>
+    <h2>Eigenes Tab</h2><p>${esc(s.custom)}</p>
+    <footer><hr><small>Automatisch erzeugt — ${new Date().toLocaleString()}</small></footer>
+    </body></html>`;
+  }
+
+  // ---- UI Events in header ----
+  document.getElementById('btn-save').addEventListener('click', ()=>{
+    save();
+    download(`${(state.title||'sbw-story').toLowerCase().replace(/\s+/g,'-')}.json`, JSON.stringify(state, null, 2));
+  });
+
+  document.getElementById('btn-export').addEventListener('click', ()=>{
+    const html = toPrintableHTML();
+    download(`${(state.title||'sbw-story').toLowerCase().replace(/\s+/g,'-')}.html`, html, 'text/html');
+  });
+
+  document.getElementById('file-import').addEventListener('change', (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try{ state = JSON.parse(rd.result); save(); render(location.hash.slice(1)||'overview'); }
+      catch(err){ alert('Import fehlgeschlagen: '+err.message); }
+    };
+    rd.readAsText(file);
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', ()=>{
+    if(confirm('Lokale Daten zurücksetzen?')){ state = structuredClone(DEFAULT_DATA); save(); render('overview'); }
+  });
+
+  // ---- Bootstrap ----
+  render(location.hash.slice(1)||'overview');
+  window.addEventListener('beforeunload', save);
+  </script>
+</body>
+</html>
